@@ -25,7 +25,10 @@
 
 -export([
 	 get_all/0,
-	 all_raw/0,
+	 get_all/1,
+	 get_all/2,
+	 get_all_raw/1,
+	 call/4,
 	 present/0
 	 
 	]).
@@ -67,12 +70,13 @@
 %% In v1.0.0 the deployment will not be persistant   
 %% @end
 %%--------------------------------------------------------------------
--spec call(Name :: string(),Function :: atom(), Args :: term()) -> Result :: term() |{error, Error :: term()}.
+-spec call(PhosconAppl :: atom(),DeviceName :: string(),Function :: atom(), Args :: term()) -> Result :: term() |{error, Error :: term()}.
 %%  Tabels or State
 %%
 
-call(Name,Function, Args) ->
-    gen_server:call(?SERVER,{call,Name,Function, Args},infinity).
+call(PhosconAppl,DeviceName,Function, Args) ->
+    gen_server:call(?SERVER,{call,PhosconAppl,DeviceName,Function, Args},infinity).
+
 %%--------------------------------------------------------------------
 %% @doc
 %% This function is an user interface to be complementary to automated
@@ -80,12 +84,41 @@ call(Name,Function, Args) ->
 %% In v1.0.0 the deployment will not be persistant   
 %% @end
 %%--------------------------------------------------------------------
--spec all_raw() -> ListOfMaps :: term() |{error, Error :: term()}.
+-spec get_all_raw(PhosconApp :: atom()) -> ListOfMaps :: term() |{error, Error :: term()}.
 %%  Tabels or State
 %%
 
-all_raw() ->
-    gen_server:call(?SERVER,{all_raw},infinity).
+get_all_raw(PhosconApp) ->
+    gen_server:call(?SERVER,{get_all_raw,PhosconApp},infinity).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% This function is an user interface to be complementary to automated
+%% load and start a provider at this host.
+%% In v1.0.0 the deployment will not be persistant   
+%% @end
+%%--------------------------------------------------------------------
+-spec get_all(PhosconApp :: atom(),DeviceType :: string()) -> ListOfDeviceName :: term() |{error, Error :: term()}.
+%%  Tabels or State
+%%
+
+get_all(PhosconApp,DeviceType) ->
+    gen_server:call(?SERVER,{get_all,PhosconApp,DeviceType},infinity).
+
+
+%%--------------------------------------------------------------------
+%% @doc
+%% This function is an user interface to be complementary to automated
+%% load and start a provider at this host.
+%% In v1.0.0 the deployment will not be persistant   
+%% @end
+%%--------------------------------------------------------------------
+-spec get_all(PhosconApp :: atom()) -> ListOfDeviceName :: term() |{error, Error :: term()}.
+%%  Tabels or State
+%%
+
+get_all(PhosconApp) ->
+    gen_server:call(?SERVER,{get_all,PhosconApp},infinity).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -208,8 +241,107 @@ init([]) ->
 
 
 
+handle_call({call,PhosconAppl,DeviceName,Function, Args}, _From, State) ->
+    Result=try lib_zigbee_server:call(PhosconAppl,DeviceName,Function, Args) of
+	       {ok,R}->
+		   {ok,R};
+	       {error,ErrorR}->
+		   {error,["M:F [A]) with reason", lib_zigbee_service,call,[PhosconAppl,DeviceName,Function, Args],"Reason=", ErrorR]}
+	   catch
+	       Event:Reason:Stacktrace ->
+		   {error,[#{event=>Event,
+			     module=>?MODULE,
+			     function=>?FUNCTION_NAME,
+			     line=>?LINE,
+			     args=>[PhosconAppl,DeviceName,Function, Args],
+			     reason=>Reason,
+			     stacktrace=>[Stacktrace]}]}
+	   end,
+    Reply=case Result of
+	      {ok,AllMaps}->
+		  {ok,AllMaps};
+	      {error,ErrorReason}->
+		  {error,ErrorReason}
+	  end,
+    {reply, Reply,State};
+
+
+handle_call({get_all_raw,PhosconApp}, _From, State) ->
+    Result=try lib_zigbee_server:get_all_raw(PhosconApp) of
+	       {ok,R}->
+		   {ok,R};
+	       {error,ErrorR}->
+		   {error,["M:F [A]) with reason", lib_zigbee_service,get_all,[],"Reason=", ErrorR]}
+	   catch
+	       Event:Reason:Stacktrace ->
+		   {error,[#{event=>Event,
+			     module=>?MODULE,
+			     function=>?FUNCTION_NAME,
+			     line=>?LINE,
+			     args=>[],
+			     reason=>Reason,
+			     stacktrace=>[Stacktrace]}]}
+	   end,
+    Reply=case Result of
+	      {ok,AllMaps}->
+		  {ok,AllMaps};
+	      {error,ErrorReason}->
+		  {error,ErrorReason}
+	  end,
+    {reply, Reply,State};
+
+handle_call({get_all,PhosconApp,DeviceType}, _From, State) ->
+    Result=try lib_zigbee_server:get_all(PhosconApp,DeviceType) of
+	       {ok,R}->
+		   {ok,R};
+	       {error,ErrorR}->
+		   {error,["M:F [A]) with reason", lib_zigbee_service,get_all,[],"Reason=", ErrorR]}
+	   catch
+	       Event:Reason:Stacktrace ->
+		   {error,[#{event=>Event,
+			     module=>?MODULE,
+			     function=>?FUNCTION_NAME,
+			     line=>?LINE,
+			     args=>[],
+			     reason=>Reason,
+			     stacktrace=>[Stacktrace]}]}
+	   end,
+    Reply=case Result of
+	      {ok,AllMaps}->
+		  {ok,AllMaps};
+	      {error,ErrorReason}->
+		  {error,ErrorReason}
+	  end,
+    {reply, Reply,State};
+
+
+handle_call({get_all,PhosconApp}, _From, State) ->
+    Result=try lib_zigbee_server:get_all(PhosconApp) of
+	       {ok,R}->
+		   {ok,R};
+	       {error,ErrorR}->
+		   {error,["M:F [A]) with reason", lib_zigbee_service,get_all,[],"Reason=", ErrorR]}
+	   catch
+	       Event:Reason:Stacktrace ->
+		   {error,[#{event=>Event,
+			     module=>?MODULE,
+			     function=>?FUNCTION_NAME,
+			     line=>?LINE,
+			     args=>[],
+			     reason=>Reason,
+			     stacktrace=>[Stacktrace]}]}
+	   end,
+    Reply=case Result of
+	      {ok,AllMaps}->
+		  {ok,AllMaps};
+	      {error,ErrorReason}->
+		  {error,ErrorReason}
+	  end,
+    {reply, Reply,State};
+
+
 handle_call({get_all}, _From, State) ->
-    Result=try lib_zigbee_service:get_all() of
+    Result=try lib_zigbee_server:get_all() of
 	       {ok,R}->
 		   {ok,R};
 	       {error,ErrorR}->

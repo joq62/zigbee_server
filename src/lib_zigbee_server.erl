@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 25 Oct 2023 by c50 <joq62@c50>
 %%%-------------------------------------------------------------------
--module(lib_zigbee_service).
+-module(lib_zigbee_server). 
 
 -include("device.hrl").
 -define(ZigbeeController,phoscon_server).
@@ -14,11 +14,15 @@
 %% API
 -export([
 	 get_all/0,
-	 get/4,
-	 put/4,
-	 get_num_map_module/1,
+	 get_all/1,
+	 get_all/2,
+	 get_all_raw/1,	 
+	 get_num_map_module/2,
+
+	 call/4,
+
 	 all/0,
-	 all_raw/0,
+
 	 present/0
 	]).
 
@@ -26,6 +30,43 @@
 %%% API
 %%%===================================================================
 
+%%--------------------------------------------------------------------
+%% @doc
+%% Needed Information : phoscon = zigbee controller/hub, DeviceName= Type and Id
+%% Function Args   
+%% @end
+%%--------------------------------------------------------------------
+get_all(PhosconApp,DeviceType)->
+    case rd:fetch_resources(PhosconApp) of
+	[]->
+	    {error,["No resources for ",PhosconApp]};
+	[{_,Node}] ->
+	    case rpc:call(Node,phoscon_server,get_maps,[DeviceType],5000) of
+		{error,Reason}->
+		    {error,[Reason,?MODULE,?LINE]};
+		{ok,TypeMaps}->
+		    {ok,get_info([{DeviceType,{ok,TypeMaps}}],[])}
+	    end
+    end.
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Needed Information : phoscon = zigbee controller/hub, DeviceName= Type and Id
+%% Function Args   
+%% @end
+%%--------------------------------------------------------------------
+get_all(PhosconApp)->
+    case rd:fetch_resources(PhosconApp) of
+	[]->
+	    {error,["No resources for ",PhosconApp]};
+	[{_,Node}] ->
+	    case rpc:call(Node,phoscon_server,get_maps,[],5000) of
+		{error,Reason}->
+		    {error,[Reason,?MODULE,?LINE]};
+		TypeMaps->
+		    {ok,get_info(TypeMaps,[])}
+	    end
+    end.
 %%--------------------------------------------------------------------
 %% @doc
 %% Needed Information : phoscon = zigbee controller/hub, DeviceName= Type and Id
@@ -51,38 +92,26 @@ get_all()->
 %% Function Args   
 %% @end
 %%--------------------------------------------------------------------
-get(ZigbeeController,DeviceName,Function,Args)->
-    case rd:fetch_resources(ZigbeeController) of
-	[]->
-	    {error,["No resources for ",ZigbeeController]};
-	[{_,Node}] ->
-	    case rd:call(Node,phoscon_server,get_maps,[],5000) of
-		{error,Reason}->
-		    {error,[Reason,?MODULE,?LINE]};
-		TypeMaps->
-		    get_info(TypeMaps,[])
-	   end
+call(PhosconApp,DeviceName,Function,Args)->
+    case  get_num_map_module(PhosconApp,DeviceName) of
+	{error,Reason}->
+	    {error,Reason};
+	{ok,Module,ListTypeNumIdMap}->
+	    rpc:call(node(),Module,Function,[PhosconApp,[],ListTypeNumIdMap],5000)
+		
     end.
-%%--------------------------------------------------------------------
-%% @doc
-%% Needed Information : phoscon = zigbee controller/hub, DeviceName= Type and Id
-%% Function Args   
-%% @end
-%%--------------------------------------------------------------------
-put(ZigbeeController,DeviceName,Function,Args)->
 
 
-    ok.    
 %%-------------------------------------------------------------------
 %% @doc
 %%  
 %% @end
 %%--------------------------------------------------------------------
-get_num_map_module(Name)->
-    case all_raw() of
+get_num_map_module(PhosconApp,Name)->
+    case get_all_raw(PhosconApp) of
 	{error,Reason}->
 	    {error,["No Maps available ,Name, Reason",Name, Reason, ?MODULE,?LINE]};
-	AllMaps->
+	{ok,AllMaps}->
 	    TYpeNumIdMapList= [{Type,NumId,Map}||{Type,NumId,Map}<-AllMaps,
 						 Name=:=binary_to_list(maps:get(<<"name">>,Map))],
 	    case TYpeNumIdMapList of
@@ -137,14 +166,18 @@ present()->
 %%  
 %% @end
 %%--------------------------------------------------------------------
-all_raw()->
-    Result=case rd:call(phoscon_server,get_maps,[],5000) of
-	       {error,Reason}->
-		   {error,[Reason,?MODULE,?LINE]};
-	       TypeMaps->
-		   get_info_raw(TypeMaps,[])
-	   end,
-    Result.
+get_all_raw(PhosconApp)->
+    case rd:fetch_resources(PhosconApp) of
+	[]->
+	    {error,["No resources for ",PhosconApp]};
+	[{_,Node}] ->
+	    case rpc:call(Node,phoscon_server,get_maps,[],5000) of
+		{error,Reason}->
+		    {error,[Reason,?MODULE,?LINE]};
+		TypeMaps->
+		    {ok,get_info_raw(TypeMaps,[])}
+	    end
+    end.
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -172,7 +205,7 @@ all()->
 %%--------------------------------------------------------------------
 get_info_raw([],Acc)->
     lists:append(Acc);
-get_info_raw([{Type,Map}|T],Acc)->
+get_info_raw([{Type,{ok,Map}}|T],Acc)->
     L=maps:to_list(Map),
     AllMaps=format_info_raw(L,Type,[]),
     get_info_raw(T,[AllMaps|Acc]).
