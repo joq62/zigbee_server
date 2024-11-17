@@ -33,8 +33,8 @@
 
 %% External exports
 -export([
-	 is_reachable/2,
-	 is_open/2
+	 is_reachable/3,
+	 is_open/3
 	]). 
 
 
@@ -48,7 +48,7 @@
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-is_reachable([],[{_Type,_NumId,Map}|_])->
+is_reachable(_PhosconApp,[],[{_Type,_NumId,Map}|_])->
     ConfigMap=maps:get(<<"config">>,Map),
     {ok,maps:get(<<"reachable">>,ConfigMap)}.
 	   
@@ -57,7 +57,7 @@ is_reachable([],[{_Type,_NumId,Map}|_])->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-is_open([],[{_Type,_NumId,Map}|_])->
+is_open(_PhosconApp,[],[{_Type,_NumId,Map}|_])->
     ConfigMap=maps:get(<<"config">>,Map),
     case maps:get(<<"reachable">>,ConfigMap) of
 	false->

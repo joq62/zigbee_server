@@ -98,7 +98,7 @@ call(PhosconApp,DeviceName,Function,Args)->
 	{error,Reason}->
 	    {error,Reason};
 	{ok,Module,ListTypeNumIdMap}->
-	    rpc:call(node(),Module,Function,[PhosconApp,[Args],ListTypeNumIdMap],5000)
+	    rpc:call(node(),Module,Function,[PhosconApp,Args,ListTypeNumIdMap],5000)
 		
     end.
 
