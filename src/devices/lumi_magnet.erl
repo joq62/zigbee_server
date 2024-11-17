@@ -34,8 +34,7 @@
 %% External exports
 -export([
 	 is_reachable/2,
-	 is_open/2,
-	 is_closed/2
+	 is_open/2
 	]). 
 
 
@@ -51,7 +50,7 @@
 %% --------------------------------------------------------------------
 is_reachable([],[{_Type,_NumId,Map}|_])->
     ConfigMap=maps:get(<<"config">>,Map),
-    maps:get(<<"reachable">>,ConfigMap).
+    {ok,maps:get(<<"reachable">>,ConfigMap)}.
 	   
 %% --------------------------------------------------------------------
 %% Function:start/0 
@@ -60,22 +59,14 @@ is_reachable([],[{_Type,_NumId,Map}|_])->
 %% --------------------------------------------------------------------
 is_open([],[{_Type,_NumId,Map}|_])->
     ConfigMap=maps:get(<<"config">>,Map),
-    io:format("ConfigMap  ~p~n",[{ConfigMap,?MODULE,?LINE}]),
     case maps:get(<<"reachable">>,ConfigMap) of
 	false->
 	    {error,["Not reachable",?MODULE,?LINE]};
 	true->
 	    StateMap=maps:get(<<"state">>,Map),
-	    io:format("StateMap  ~p~n",[{StateMap,?MODULE,?LINE}]),
-	    maps:get(<<"open">>,StateMap)
+	    {ok,maps:get(<<"open">>,StateMap)}
     end.
-%%--------------------------------------------------------------------
-%% @doc
-%% 
-%% @end
-%%--------------------------------------------------------------------
-is_closed([],ListTypeNumIdMap)->
-    false=:=is_open([],ListTypeNumIdMap).
+
 
 %% ====================================================================
 %% Internal functions

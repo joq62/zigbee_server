@@ -67,10 +67,10 @@
 
 %% External exports
 -export([
-	 is_reachable/2,
-	 temp/2,
-	 humidity/2,
-	 pressure/2
+	 is_reachable/3,
+	 temp/3,
+	 humidity/3,
+	 pressure/3
 	]). 
 
 
@@ -82,9 +82,9 @@
 %% 
 %% @end
 %%--------------------------------------------------------------------
-is_reachable([],[{_Type,_NumId,Map}|_])->
+is_reachable(_PhosconApp,[],[{_Type,_NumId,Map}|_])->
     ConfigMap=maps:get(<<"config">>,Map),
-    maps:get(<<"reachable">>,ConfigMap).
+    {ok,maps:get(<<"reachable">>,ConfigMap)}.
 	   
 	  
     
@@ -93,11 +93,11 @@ is_reachable([],[{_Type,_NumId,Map}|_])->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-temp([],ListTypeNumIdMap)->
+temp(_PhosconApp,[],ListTypeNumIdMap)->
     StateMaps=[maps:get(<<"state">>,Map)||{_,_,Map}<-ListTypeNumIdMap],
     [Raw]=[maps:get(<<"temperature">>,StateMap)||StateMap<-StateMaps,
 						 true=:=maps:is_key(<<"temperature">>,StateMap)],
-    Raw/100.
+    {ok,Raw/100}.
 							     
 							     
 %% --------------------------------------------------------------------
@@ -105,11 +105,11 @@ temp([],ListTypeNumIdMap)->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-humidity([],ListTypeNumIdMap)->
+humidity(_PhosconApp,[],ListTypeNumIdMap)->
     StateMaps=[maps:get(<<"state">>,Map)||{_,_,Map}<-ListTypeNumIdMap],
     [Raw]=[maps:get(<<"humidity">>,StateMap)||StateMap<-StateMaps,
 					      true=:=maps:is_key(<<"humidity">>,StateMap)],
-    Raw/100.
+    {ok,Raw/100}.
 							     
 							     
 %% --------------------------------------------------------------------
@@ -117,9 +117,9 @@ humidity([],ListTypeNumIdMap)->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-pressure([],ListTypeNumIdMap)->
+pressure(_PhosconApp,[],ListTypeNumIdMap)->
     StateMaps=[maps:get(<<"state">>,Map)||{_,_,Map}<-ListTypeNumIdMap],
     [Raw]=[maps:get(<<"pressure">>,StateMap)||StateMap<-StateMaps,
 					      true=:=maps:is_key(<<"pressure">>,StateMap)],
-    Raw.
+    {ok,Raw}.
 

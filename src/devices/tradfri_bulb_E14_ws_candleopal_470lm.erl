@@ -35,13 +35,12 @@
 
 %% External exports
 -export([
-	 is_reachable/2,
-	 is_on/2,
-	 is_off/2,
-	 turn_on/2,
-	 turn_off/2,
-	 get_bri/2,
-	 set_bri/2
+	 is_reachable/3,
+	 is_on/3,
+	 turn_on/3,
+	 turn_off/3,
+	 get_bri/3,
+	 set_bri/3
 	 
 	]). 
 
@@ -54,9 +53,9 @@
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-is_reachable([],[{_Type,_NumId,Map}|_])->
+is_reachable(_PhosconApp,[],[{_Type,_NumId,Map}|_])->
     StateMap=maps:get(<<"state">>,Map),
-    maps:get(<<"reachable">>,StateMap).
+    {ok,maps:get(<<"reachable">>,StateMap)}.
 	   
 	   
 %% --------------------------------------------------------------------
@@ -64,33 +63,20 @@ is_reachable([],[{_Type,_NumId,Map}|_])->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-is_on([],[{_Type,_NumId,Map}|_])->
+is_on(_PhosconApp,[],[{_Type,_NumId,Map}|_])->
     StateMap=maps:get(<<"state">>,Map),
     case maps:get(<<"reachable">>,StateMap) of
 	false->
 	    {error,["Not reachable",?MODULE,?LINE]};
 	true->
-	    maps:get(<<"on">>,StateMap)
+	    {on,maps:get(<<"on">>,StateMap)}
     end.
 %%--------------------------------------------------------------------
 %% @doc
 %% 
 %% @end
 %%--------------------------------------------------------------------
-is_off([],ListTypeNumIdMap)->
-    false=:=is_on([],ListTypeNumIdMap).
-%%--------------------------------------------------------------------
-%% @doc
-%% 
-%% @end
-%%--------------------------------------------------------------------
-
-%%--------------------------------------------------------------------
-%% @doc
-%% 
-%% @end
-%%--------------------------------------------------------------------
-turn_on([],[{_Type,NumId,Map}|_])->
+turn_on(PhosconApp,[],[{_Type,NumId,Map}|_])->
     StateMap=maps:get(<<"state">>,Map),
     case maps:get(<<"reachable">>,StateMap) of
 	false->
@@ -100,7 +86,17 @@ turn_on([],[{_Type,NumId,Map}|_])->
 	    Key=list_to_binary("on"),
 	    Value=true,
 	    DeviceType=?Type,
-	    rd:call(phoscon_control,set_state,[Id,Key,Value,DeviceType],5000)
+	      case rd:fetch_resources(PhosconApp) of
+		[]->
+		    {error,["No resources for ",PhosconApp]};
+		[{_,Node}] ->
+		    case rpc:call(Node,phoscon_server,set_state,[Id,Key,Value,DeviceType],5000) of
+			{ok,200,_Body,_Result}->
+			    {ok,"on"};
+			Error ->
+			    {error,[Error]}
+		    end
+	      end
     end.
 
 %%--------------------------------------------------------------------
@@ -108,7 +104,7 @@ turn_on([],[{_Type,NumId,Map}|_])->
 %% 
 %% @end
 %%--------------------------------------------------------------------
-turn_off([],[{_Type,NumId,Map}|_])->
+turn_off(PhosconApp,[],[{_Type,NumId,Map}|_])->
     StateMap=maps:get(<<"state">>,Map),
     case maps:get(<<"reachable">>,StateMap) of
 	false->
@@ -118,7 +114,17 @@ turn_off([],[{_Type,NumId,Map}|_])->
 	    Key=list_to_binary("on"),
 	    Value=false,
 	    DeviceType=?Type,
-	    rd:call(phoscon_control,set_state,[Id,Key,Value,DeviceType],5000)
+	     case rd:fetch_resources(PhosconApp) of
+		[]->
+		    {error,["No resources for ",PhosconApp]};
+		[{_,Node}] ->
+		    case rpc:call(Node,phoscon_server,set_state,[Id,Key,Value,DeviceType],5000) of
+			{ok,200,_Body,_Result}->
+			    {ok,"off"};
+			Error ->
+			    {error,[Error]}
+		    end
+	      end
     end.
 
 
@@ -128,13 +134,13 @@ turn_off([],[{_Type,NumId,Map}|_])->
 %% 
 %% @end
 %%--------------------------------------------------------------------
-get_bri([],[{_Type,_NumId,Map}|_])->
+get_bri(_PhosconApp,[],[{_Type,_NumId,Map}|_])->
     StateMap=maps:get(<<"state">>,Map),
     case maps:get(<<"reachable">>,StateMap) of
 	false->
 	    {error,["Not reachable",?MODULE,?LINE]};
 	true->
-	    maps:get(<<"bri">>,StateMap)
+	   {ok, maps:get(<<"bri">>,StateMap)}
     end.
 
 
@@ -143,7 +149,7 @@ get_bri([],[{_Type,_NumId,Map}|_])->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-set_bri([Bri],[{_Type,NumId,Map}|_])->
+set_bri(PhosconApp,[Bri],[{_Type,NumId,Map}|_])->
     StateMap=maps:get(<<"state">>,Map),
     case maps:get(<<"reachable">>,StateMap) of
 	false->
@@ -153,5 +159,15 @@ set_bri([Bri],[{_Type,NumId,Map}|_])->
 	    Key=list_to_binary("bri"),
 	    Value=Bri,
 	    DeviceType=?Type,
-	    rd:call(phoscon_control,set_state,[Id,Key,Value,DeviceType],5000)
+	     case rd:fetch_resources(PhosconApp) of
+		[]->
+		    {error,["No resources for ",PhosconApp]};
+		[{_,Node}] ->
+		    case rpc:call(Node,phoscon_server,set_state,[Id,Key,Value,DeviceType],5000) of
+			{ok,200,_Body,_Result}->
+			    {ok,Bri};
+			Error ->
+			    {error,[Error]}
+		    end
+	      end
     end.

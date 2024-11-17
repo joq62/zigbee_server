@@ -52,13 +52,13 @@
 
 %% External exports
 -export([
-	 is_reachable/2,
-	 is_presence/2,
+	 is_reachable/3,
+	 is_presence/3,
 
-	 is_dark/2,
-	 is_daylight/2,
-	 lightlevel/2,
-	 lux/2
+	 is_dark/3,
+	 is_daylight/3,
+	 lightlevel/3,
+	 lux/3
 	]). 
 
 
@@ -72,61 +72,61 @@
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-is_reachable([],[{_Type,_NumId,Map}|_])->
+is_reachable(_PhosconApp,[],[{_Type,_NumId,Map}|_])->
     ConfigMap=maps:get(<<"config">>,Map),
-    maps:get(<<"reachable">>,ConfigMap).
+    {ok,maps:get(<<"reachable">>,ConfigMap)}.
 	   
 %% --------------------------------------------------------------------
 %% Function:start/0 
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-is_presence([],ListTypeNumIdMap)->
+is_presence(_PhosconApp,[],ListTypeNumIdMap)->
     StateMaps=[maps:get(<<"state">>,Map)||{_,_,Map}<-ListTypeNumIdMap],
     [Raw]=[maps:get(<<"presence">>,StateMap)||StateMap<-StateMaps,
 						   true=:=maps:is_key(<<"presence">>,StateMap)],
-    Raw.
+    {ok,Raw}.
 
 %% --------------------------------------------------------------------
 %% Function:start/0 
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-is_dark([],ListTypeNumIdMap)->
+is_dark(_PhosconApp,[],ListTypeNumIdMap)->
     StateMaps=[maps:get(<<"state">>,Map)||{_,_,Map}<-ListTypeNumIdMap],
     [Raw]=[maps:get(<<"dark">>,StateMap)||StateMap<-StateMaps,
 					  true=:=maps:is_key(<<"dark">>,StateMap)],
-    Raw.
+    {ok,Raw}.
 %% --------------------------------------------------------------------
 %% Function:start/0 
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-is_daylight([],ListTypeNumIdMap)->
+is_daylight(_PhosconApp,[],ListTypeNumIdMap)->
     StateMaps=[maps:get(<<"state">>,Map)||{_,_,Map}<-ListTypeNumIdMap],
     [Raw]=[maps:get(<<"daylight">>,StateMap)||StateMap<-StateMaps,
 					  true=:=maps:is_key(<<"daylight">>,StateMap)],
-    Raw.
+    {ok,Raw}.
 %% --------------------------------------------------------------------
 %% Function:start/0 
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-lightlevel([],ListTypeNumIdMap)->
+lightlevel(_PhosconApp,[],ListTypeNumIdMap)->
     StateMaps=[maps:get(<<"state">>,Map)||{_,_,Map}<-ListTypeNumIdMap],
     [Raw]=[maps:get(<<"lightlevel">>,StateMap)||StateMap<-StateMaps,
 					  true=:=maps:is_key(<<"lightlevel">>,StateMap)],
-    Raw.
+    {ok,Raw}.
 %% --------------------------------------------------------------------
 %% Function:start/0 
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-lux([],ListTypeNumIdMap)->
+lux(_PhosconApp,[],ListTypeNumIdMap)->
     StateMaps=[maps:get(<<"state">>,Map)||{_,_,Map}<-ListTypeNumIdMap],
     [Raw]=[maps:get(<<"lux">>,StateMap)||StateMap<-StateMaps,
 					  true=:=maps:is_key(<<"lux">>,StateMap)],
-    Raw.
+    {ok,Raw}.
 
 
 %% ====================================================================

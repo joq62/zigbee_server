@@ -35,8 +35,8 @@
 
 %% External exports
 -export([
-	 is_reachable/2,
-	 has_vibrated/2
+	 is_reachable/3,
+	 has_vibrated/3
 	]). 
 
 
@@ -50,16 +50,16 @@
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-is_reachable([],[{_Type,_NumId,Map}|_])->
+is_reachable(_PhosconApp,[],[{_Type,_NumId,Map}|_])->
     ConfigMap=maps:get(<<"config">>,Map),
-    maps:get(<<"reachable">>,ConfigMap).
+    {ok,maps:get(<<"reachable">>,ConfigMap)}.
 	   
 %% --------------------------------------------------------------------
 %% Function:start/0 
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-has_vibrated([],[{_Type,_NumId,Map}|_])->
+has_vibrated(_PhosconApp,[],[{_Type,_NumId,Map}|_])->
     ConfigMap=maps:get(<<"config">>,Map),
 %    io:format("ConfigMap  ~p~n",[{ConfigMap,?MODULE,?LINE}]),
     case maps:get(<<"reachable">>,ConfigMap) of
@@ -68,7 +68,7 @@ has_vibrated([],[{_Type,_NumId,Map}|_])->
 	true->
 	    StateMap=maps:get(<<"state">>,Map),
 %	    io:format("StateMap  ~p~n",[{StateMap,?MODULE,?LINE}]),
-	    maps:get(<<"vibration">>,StateMap)
+	    {ok,maps:get(<<"vibration">>,StateMap)}
     end.
 
 %% ====================================================================

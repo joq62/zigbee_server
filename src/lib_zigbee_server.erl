@@ -18,6 +18,7 @@
 	 get_all/2,
 	 get_all_raw/1,	 
 	 get_num_map_module/2,
+	 get_module/2,
 
 	 call/4,
 
@@ -97,7 +98,7 @@ call(PhosconApp,DeviceName,Function,Args)->
 	{error,Reason}->
 	    {error,Reason};
 	{ok,Module,ListTypeNumIdMap}->
-	    rpc:call(node(),Module,Function,[PhosconApp,[],ListTypeNumIdMap],5000)
+	    rpc:call(node(),Module,Function,[PhosconApp,[Args],ListTypeNumIdMap],5000)
 		
     end.
 
@@ -133,12 +134,19 @@ get_num_map_module(PhosconApp,Name)->
 	    end
     end.
 
-test_get_module([],ModelId,false,_Module)->
+%%--------------------------------------------------------------------
+%% @doc
+%%
+%% @end
+%%--------------------------------------------------------------------
+get_module(DeviceMaps,ModelId)->
+    get_module(DeviceMaps,ModelId,false,undefined).
+
+get_module([],ModelId,false,_Module)->
     {error,["Not found ",ModelId]};
-test_get_module(_,_ModelId,true,Module)->
+get_module(_,_ModelId,true,Module)->
     Module;
-test_get_module([DeviceMap|T],ModelId,false,_)->
-    io:format("ModelId,  DeviceMap ~p~n",[{ModelId,DeviceMap,?MODULE,?LINE}]),
+get_module([DeviceMap|T],ModelId,false,_)->
     case ModelId=:=maps:get(modelid,DeviceMap) of
 	true->
 	    Found=true,
@@ -147,8 +155,7 @@ test_get_module([DeviceMap|T],ModelId,false,_)->
 	    Found=false,
 	    Module=na
     end,
-    io:format("Found, Module ~p~n",[{Found, Module,?MODULE,?LINE}]),
-    test_get_module(T,ModelId,Found,Module).
+    get_module(T,ModelId,Found,Module).
 %%--------------------------------------------------------------------
 %% @doc
 %%  

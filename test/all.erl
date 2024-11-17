@@ -27,14 +27,45 @@ start()->
    
     ok=setup(),
     timer:sleep(2*5000),
-%    ok=test1(),
-%    ok=test2(),
-    ok=test3(),
+ %   ok=test1(),
+ %   ok=test2(),
+ %   ok=test3(),
+    ok=test_sensors(),
     io:format("Test OK !!! ~p~n",[?MODULE]),
     timer:sleep(2000),
     init:stop(),
     ok.
 
+%%-----------------------------------------------
+%% Function: available_hosts()
+%% Description: Based on hosts.config file checks which hosts are avaible
+%% Returns: List({HostId,Ip,SshPort,Uid,Pwd}
+%% --------------------------------------------------------------------
+test_sensors()->
+    io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+
+    
+    %% Weather
+    {ok,true}=zigbee_server:call(?PhosconApp,"weather_2",is_reachable,[]),
+    {ok,TempFloat}=zigbee_server:call(?PhosconApp,"weather_2",temp,[]),
+    Temp=lists:flatten(float_to_list(TempFloat,[{decimals, 1}])," °C"),
+    io:format("Temp = ~p~n",[Temp]),
+    {ok,HumidityFloat}=zigbee_server:call(?PhosconApp,"weather_2",humidity,[]),
+    Humidity=lists:flatten(float_to_list(HumidityFloat,[{decimals, 1}])," %"),
+    io:format("Humidity = ~p~n",[Humidity]),
+    {ok,PressureFloat}=zigbee_server:call(?PhosconApp,"weather_2",pressure,[]),
+    Pressure=lists:flatten(integer_to_list(PressureFloat)," hPa"),
+    io:format("Pressure = ~p~n",[Pressure]),
+    
+    % Motion
+    {ok,true}=zigbee_server:call(?PhosconApp,"motion_test",is_reachable,[]),
+    
+    % Vibration
+     {ok,true}=zigbee_server:call(?PhosconApp,"vibration_test",is_reachable,[]),
+  
+     % Door sensor
+    {ok,true}=zigbee_server:call(?PhosconApp,"door_test",is_reachable,[]),
+    ok.
 %%-----------------------------------------------
 %% Function: available_hosts()
 %% Description: Based on hosts.config file checks which hosts are avaible
@@ -108,7 +139,7 @@ test1()->
      {"sensors","6","weather_1","lumi.weather"},{"sensors","7","weather_1","lumi.weather"},{"sensors","8","switch_lamps","TRADFRI on/off switch"},
      {"sensors","9","switch_tv","TRADFRI on/off switch"}
     ]=lists:sort(AllInfo),
-    %io:format("AllInfo ~p~n",[{AllInfo,?MODULE,?FUNCTION_NAME,?LINE}]),
+    io:format("AllInfo ~p~n",[{AllInfo,?MODULE,?FUNCTION_NAME,?LINE}]),
 
     ok.
 %%-----------------------------------------------
